@@ -27,9 +27,24 @@ Engineers are drowned in JS' fuster-clucked syntax
 (they should hire me to write eulogies)
 
 
-## Developer Guidelines
+## Developer Manual
+
+### Commandments
+
+Don't break these.
 
 1. **Thou shalt not define drivers or site configs at the top level of any namespace**. We're leaving the door open for this being extended into a bonafide library. Libraries are `required` into namespace. Top-level definitions with side effects are a great way to break anything that requires your library by poisoning the namespace (making it fail to load because `e/chrome` or whatever threw), . Therefore, they must not be declared at the top level of a namespace. Instead, drivers should be bound in REPL sessions or passed as function args.
 2. **Thou shalt keep `resolve-env` and` load-site` logically separate**. There is a real logical difference between those two functions that must be maintained in order to keep the extensibility door open. `resolve-env` *transforms* data, walking the loaded config map and interpolating the values of env vars. By contrast, `load-site` *acquires* data. It's responsible for getting the `edn` config into your hands in the first place. `resolve-env` maps config with unresolved env var placeholders to usable config; `load-site` maps a site name to a config map that *may or may not be resolved*. Remember, this is REPL-based; if someone builds a config map by hand in the REPL, they might have env vars in there that require passing that map to `resolve-env`, and they're gonna be mighty cheesed off if `resolve-env` is not exposed independently from `load-site`.
 3. **Thou shalt not hardcode thy favorite browser**. Yes, yes, I know, your browser is the *best* browser and other browsers are for n00bs who don't use your *perfect* browser because they're not the l33t n1nj4 haxx0r like you. And this also applies to your IDE, your OS, and your favorite ice cream. Fine. Just don't hardcode it.
 4. **Thou shalt return the driver**. We write composable functions here. Much as Lego bricks can only connect because every brick as pegs on top and slots on bottom, Falconer functions are only composable if they always return the driver so you can thread them however you want.
+
+
+### Dev Honor Code
+
+Not life-and-death but try to do this more-or-less. Not actual rules. More of what ya might call... guidelines.
+
+- Commit messages are declarative because I think it sounds cooler. Not "Make f return driver" but "f returns driver". If you create something, just state the name of the thing in your commit message: instead of "Create config for some-site" just say "Config for some-site".
+- Comments, if they exist, should state WHY the code is there, not WHAT it does. WHAT the code does should be self-evident.
+- "Boyscouting", or the fixing of small issues unrelated to the main PR's stated goal, is encouraged. :-)
+- Please make use of LLMs or search engines instead of asking for translations of the Elizabethan terms in the FAQ. That's right, you snooty code-monkey, I demand literacy! Of books! With no code or equations!
+- Acting irreverent and smarmy is fine as long as everybody is having a good time and you're not being an actual jerk. Feel free to make snide remarks in your PRs and commit messages about me, my code, my cat, and my face. My stupid, *stupid* face.
