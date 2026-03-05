@@ -1,2 +1,34 @@
-.nrepl-port
+# Clojure / JVM
+target/
+classes/
 .cpcache/
+*.jar
+*.class
+
+# nREPL
+.nrepl-port
+.nrepl-history
+
+# Editor tooling
+.lsp/
+.clj-kondo/.cache/
+.calva/
+
+# Emacs
+*~
+\#*\#
+*.elc
+.dir-locals.el
+
+# macOS
+.DS_Store
+
+# Secrets
+.env
+.env.*
+
+# Scrape output
+output/
+
+# Debug screenshots
+*.png
