@@ -10,13 +10,16 @@
     (e/go driver login-url)
     (doseq [[_field-name {:keys [q value]}] fields]
       (e/wait-visible driver q)
-      (e/fill driver q value)
-      (e/click driver (:q submit)))
+      (e/fill driver q value))
+    (e/click driver (:q submit))
     (e/wait-visible driver (:q success))
     driver))
 
 (defn logged-in?
-  "CHeck whether the success element from the auth config is visible.
-  Useful for detecting expired sessions mis-scrape."
+  "Check whether the success element from the auth config is visible.
+  Useful for detecting expired sessions mid-scrape."
   [driver {:keys [auth] :as _site}]
   (e/exists? driver (get-in auth [:success :q])))
+
+(ns falcon.auth
+  (:require [etaoin.api :as e]))
