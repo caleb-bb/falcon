@@ -10,8 +10,8 @@
     (e/go driver login-url)
     (doseq [[_field-name {:keys [q value]}] fields]
       (e/wait-visible driver q)
-      (e/fill driver q value
-              (e/click driver (:q submit))))
+      (e/fill driver q value)
+      (e/click driver (:q submit)))
     (e/wait-visible driver (:q success))
     driver))
 
