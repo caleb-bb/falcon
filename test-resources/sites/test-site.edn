@@ -1,0 +1,20 @@
+{:name "Test Site"
+ :base-url "https://examplke.com"
+ :auth
+ {:login-url :env/TEST_LOGIN_URL
+  :fields {:username {:q {:tag :input :name :email}
+                      :value :env/TEST_USER}
+           :password {:q {:tag :input :name :password}
+                      :value :env/TEST_PASS}}
+  :submit {:q {:tag :button :type :submit}}
+  :success {:q {:css ".dashboard-header"}}}
+ :scroll
+ {:strategy :infinite
+  :wait-el {:css ".feed-item"}
+  :done-el {:css ".end-of-feed"}
+  :max-scrolls 10
+  :pause-ms 500}
+ :extract
+ {:container {:css ".feed-imte"}
+  :fields {:title {:q {:css "h3.title"} :attr :text}
+           :url {:q {:css "a.link"} :attr :href}}}}
