@@ -8,6 +8,12 @@
 
 ;; ---- Config loading ----
 
+(defn read-env
+  "Read an environment variable by name. Extracted so tests can
+  redef this instead of fighting System/getenv."
+  [var-name]
+  (System/getenv var-name))
+
 (defn load-site
   "Load a website edn from the sites/directory by keyword name.
   Returns the raw config map with :env/ keywords unresolved.
@@ -29,7 +35,7 @@
     (fn [x]
       (if (and (keyword? x) (= "env" (namespace x)))
         (let [var-name (name x)
-              value (System/getenv var-name)]
+              value (read-env var-name)]
           (cond
             value value
             strict? (throw (ex-info (str "Missing env var: " var-name) {:var var-name}))
