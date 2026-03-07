@@ -71,7 +71,7 @@
     (when (and binary (not (which binary)))
       (throw (ex-info (str "WebDriver not found: " binary
                            ". Install it (e.g. brew install " binary ")")
-                    {:browser browser :binary binary})))))
+                      {:browser browser :binary binary})))))
 
 ;; ---- Browser lifecycle ----
 
