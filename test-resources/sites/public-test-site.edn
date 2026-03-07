@@ -1,1 +1,10 @@
-
+{:name "Public Test Site"
+ :base-url "https://example.com"
+ :scroll
+ {:strategy :infinite
+  :wait-el {:css ".item"}
+  :max-scrolls 5
+  :pause-ms 500}
+ :extract
+ {:container {:css ".item"}
+  :fields {:title {:q {:css "h2"} :attr :text}}}}
