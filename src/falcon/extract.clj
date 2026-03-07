@@ -15,16 +15,16 @@
 (defn extract-all
   "Extract structured data from the page using the site config's :extract map.
   Returns a vector of maps, one per container element found."
-  [driver {:keys [container fields]} extract
-   containers (e/query-all driver container)]
-  (mapv (fn [container-el]
-          (reduce-kv
-           (fn [acc field-name field-spec]
-             (assoc acc field-name (extract-field driver container-el field-spec)))
-           {}
-           fields))
-        containers))
-
+  [driver {:keys [extract] :as _site}]
+  (let [{:keys [container fields]} extract
+        containers (e/query-all driver container)]
+    (mapv (fn [container-el]
+            (reduce-kv
+             (fn [acc field-name field-spec]
+               (assoc acc field-name (extract-field driver container-el field-spec))
+               {}
+               fields))
+            containers))))
 
 (defn extract-raw
   "Ad-hoc extraction helper for the REPL. Taks a CSS/XPath query and
