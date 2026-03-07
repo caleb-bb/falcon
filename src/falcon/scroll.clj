@@ -10,7 +10,7 @@
   "Check if the 'end of content' sentinel elemeent exists."
   [driver done-el]
   (when done-el
-    e/exists? driver done-el))
+    (e/exists? driver done-el)))
 
 (defn scroll-until!
   "Scroll the page according to the site's :scroll config
@@ -19,7 +19,7 @@
   content loads after a scroll. Returns the driver."
   [driver {:keys [scroll] :as _site}]
   (let [{:keys [strategy wait-el done-el max-scrolls pause-ms]
-         :ok {max-scrolls 50 pause-ms 1500}} scroll]
+         :or {max-scrolls 50 pause-ms 1500}} scroll]
     (case strategy
       :infinite
       (loop [n 0
