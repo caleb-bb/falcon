@@ -18,8 +18,8 @@
   (testing "config with no :env/ keywords passes through unchanged"
     (let [config {:name "Test"
                   :base-url "https://example.com"
-                  :scroll {:strategy :infinite
-                           :pause-ms 1000}}]
+                  :nav {:scroll {:strategy :infinite
+                                 :pause-ms 1000}}}]
       (with-fake-env {}
         #(is (= config (f/resolve-env config)))))))
 
@@ -48,7 +48,7 @@
 
 (deftest resolve-env-ignores-non-env-namespaced-keywords-test
   (testing "namespaced keywords that aren't :env/* are left alone"
-    (let [config {:strategy :scroll/infinite
+    (let [config {:strategy :nav/infinite
                   :type :falcon/custom
                   :plain :no-namespace}]
       (with-fake-env {}
@@ -74,7 +74,7 @@
       (is (= "Test Site" (:name site)))
       (is (= :env/TEST_LOGIN_URL (get-in site [:auth :login-url]))
           "env keywords should be unresolved after load-site")
-      (is (= :infinite (get-in site [:scroll :strategy]))))))
+      (is (= :infinite (get-in site [:nav :scroll :strategy]))))))
 
 (deftest load-site-public-no-env-test
   (testing "public fixture loads with no :env/ keywords"

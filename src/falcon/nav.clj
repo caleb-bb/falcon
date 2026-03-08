@@ -13,13 +13,13 @@
     (e/exists? driver done-el)))
 
 (defn scroll-until!
-  "Navigate the page according to the site's :nav config
+  "Scroll the page according to the site's :nav :scroll config
   For :infinite strategy: scrolls to bottom, waits for new content to load,
   repeats until either :done-el appears, :max-scrolls is hit, or no new
   content loads after a scroll. Returns the driver."
   [driver {:keys [nav] :as _site}]
   (let [{:keys [strategy wait-el done-el max-scrolls pause-ms]
-         :or {max-scrolls 50 pause-ms 1500}} nav]
+         :or {max-scrolls 50 pause-ms 1500}} (:scroll nav)]
     (case strategy
       :infinite
       (loop [n 0
@@ -47,7 +47,7 @@
   driver)
 
 ;; In the site config:
-;; :nav {:strategy :paginate
+;; :nav {:scroll {:strategy :paginate
 ;; :paginate
 ;; (loop [n 0]
 ;; (when (and (< n max-pages) (not (done? driver done-el)))
