@@ -20,6 +20,3 @@
   Useful for detecting expired sessions mid-scrape."
   [driver {:keys [auth] :as _site}]
   (e/exists? driver (get-in auth [:success :q])))
-
-(ns falcon.auth
-  (:require [etaoin.api :as e]))
