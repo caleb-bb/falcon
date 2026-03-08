@@ -1,5 +1,5 @@
 {:name "Test Site"
- :base-url "https://examplke.com"
+ :base-url "https://example.com"
  :auth
  {:login-url :env/TEST_LOGIN_URL
   :fields {:username {:q {:tag :input :name :email}
