@@ -1,4 +1,4 @@
-(ns falcon.scroll
+(ns falcon.nav
   (:require [etaoin.api :as e]))
 
 (defn- count-elements
@@ -13,13 +13,13 @@
     (e/exists? driver done-el)))
 
 (defn scroll-until!
-  "Scroll the page according to the site's :scroll config
+  "Navigate the page according to the site's :nav config
   For :infinite strategy: scrolls to bottom, waits for new content to load,
   repeats until either :done-el appears, :max-scrolls is hit, or no new
   content loads after a scroll. Returns the driver."
-  [driver {:keys [scroll] :as _site}]
+  [driver {:keys [nav] :as _site}]
   (let [{:keys [strategy wait-el done-el max-scrolls pause-ms]
-         :or {max-scrolls 50 pause-ms 1500}} scroll]
+         :or {max-scrolls 50 pause-ms 1500}} nav]
     (case strategy
       :infinite
       (loop [n 0
@@ -34,7 +34,7 @@
               driver))))
       :none driver
     ;; default / unknown
-      (throw (ex-info "Unknown scroll strategy" {:strategy strategy})))
+      (throw (ex-info "Unknown nav strategy" {:strategy strategy})))
     driver))
 
 (defn scroll-n!
@@ -47,7 +47,7 @@
   driver)
 
 ;; In the site config:
-;; :scroll {:strategy :paginate
+;; :nav {:strategy :paginate
 ;; :paginate
 ;; (loop [n 0]
 ;; (when (and (< n max-pages) (not (done? driver done-el)))
