@@ -1,0 +1,42 @@
+{:base-url "https://www.example.com"
+
+ :auth
+ {:login-url :env/EXAMPLE_LOGIN_URL
+  :fields
+  {:username {:q {:css "input[name=email]"}
+              :value :env/EXAMPLE_USER}
+   :password {:q {:css "input[name=password]"}
+              :value :env/EXAMPLE_PASS}}
+  :submit {:q {:css "button[type=submit]"}}
+  :success {:q {:css ".dashboard"}}}
+
+ :nav
+ {:search
+  {:posts {:q {:css "#search-input"}
+           :submit {:q {:css "button.search"}}}}
+  :click
+  {:comments {:q {:css "a.comments-tab"}}
+   :replies  {:q {:css "a.replies-tab"}}}
+  :scroll
+  {:infinite {:wait-el   {:q {:css ".feed-item"}}
+              :done-el   {:q {:css ".end-of-feed"}}}}}
+
+ :extract
+ {:post
+  {:container {:q {:css ".post-card"}}
+   :fields
+   {:title  {:q {:css "h2.post-title"}  :attr :text}
+    :body   {:q {:css ".post-body"}     :attr :text}
+    :url    {:q {:css "a.post-link"}    :attr :href}
+    :author {:q {:css ".author-name"}   :attr :text}}}
+  :comment
+  {:container {:q {:css ".comment-item"}}
+   :fields
+   {:body   {:q {:css ".comment-text"}  :attr :text}
+    :author {:q {:css ".commenter"}     :attr :text}}}}
+
+ :opts
+ {:headless true
+  :pause-ms 200
+  :scroll {:pause-ms 500
+           :max-scrolls 50}}}
