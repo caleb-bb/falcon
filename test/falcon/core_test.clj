@@ -112,3 +112,13 @@
   (testing "sites with non-string non-env base-url are invalid"
     (let [site (f/load-site :invalid-site-with-illegal-base-url)]
       (is (= (f/valid-edn? site) false)))))
+
+(deftest no-name-returns-false
+  (testing "sites without an opts key are invalid"
+    (let [site (f/load-site :invalid-site-with-no-opts)]
+      (is (= (f/valid-edn? site) false)))))
+
+(deftest illegal-opts-returns-false
+  (testing "sites with non-map opts key are invalid"
+    (let [site (f/load-site :invalid-site-with-illegal-opts)]
+      (is (= (f/valid-edn? site) false)))))

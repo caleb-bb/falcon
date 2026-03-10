@@ -129,7 +129,7 @@
 ;; ---- Validators ----
 
 (def legal-keys #{:name :base-url :auth :nav :extract :opts})
-(def required-keys #{:name :base-url})
+(def required-keys #{:base-url :name :opts})
 (def verbs #{:auth :nav :extract})
 
 (defn legal-keys? [edn]
@@ -157,9 +157,14 @@
         (= (type edn-base-url) java.lang.String)
         (str/starts-with? base-url-name ":env/"))))
 
+(defn opts-is-map? [edn]
+  (let [edn-opts (get edn :opts)]
+    (= (type edn-opts) clojure.lang.PersistentArrayMap)))
+
 (def meets-requirements?
-  (every-pred legal-keys? has-a-verb? includes-required-keys?
-              name-is-string? base-url-is-env-or-string?))
+  (every-pred
+    legal-keys? has-a-verb? includes-required-keys?
+    name-is-string? base-url-is-env-or-string? opts-is-map?))
 
 (defn valid-edn? [edn]
   (meets-requirements? edn))
