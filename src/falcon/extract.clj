@@ -43,3 +43,12 @@
   (-> url
       (http/get)
       (get :body)))
+
+;; ---- File i/o (primarily for convenience at this point) ----
+
+(defn save-site
+  "Retrieves html from a site and saves it to the site directory"
+  [url filename]
+  (-> url
+      (body)
+      (spit (str "/resources/html/" filename ".html"))))
