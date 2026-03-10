@@ -107,3 +107,8 @@
   (testing "sites with non-string name key are invalid"
     (let [site (f/load-site :invalid-site-with-illegal-name)]
       (is (= (f/valid-edn? site) false)))))
+
+(deftest illegal-base-url-returns-false
+  (testing "sites with non-string non-env base-url are invalid"
+    (let [site (f/load-site :invalid-site-with-illegal-base-url)]
+      (is (= (f/valid-edn? site) false)))))

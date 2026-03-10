@@ -149,7 +149,17 @@
   (let [edn-name (get edn :name)]
     (= (type edn-name) java.lang.String)))
 
-(def meets-requirements? (every-pred legal-keys? has-a-verb? includes-required-keys? name-is-string?))
+
+(defn base-url-is-env-or-string? [edn]
+  (let [edn-base-url (get edn :base-url)
+        base-url-name (name edn-base-url)]
+    (or
+        (= (type edn-base-url) java.lang.String)
+        (str/starts-with? base-url-name ":env/"))))
+
+(def meets-requirements?
+  (every-pred legal-keys? has-a-verb? includes-required-keys?
+              name-is-string? base-url-is-env-or-string?))
 
 (defn valid-edn? [edn]
   (meets-requirements? edn))
