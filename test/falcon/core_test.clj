@@ -90,10 +90,20 @@
 
 (deftest valid-test-site-passes-validation
   (testing "pipeline validates legal site edn"
-   (let [site (f/load-site :test-site)]
-     (is (= (f/valid-edn? site) true)))))
+    (let [site (f/load-site :test-site)]
+      (is (= (f/valid-edn? site) true)))))
 
-(deftest illegal-keys-return-false
+(deftest illegal-keys-returns-false
   (testing "pipeline invalidates edn with illegal keys"
     (let [site (f/load-site :invalid-site-with-illegal-keys)]
-     (is (= (f/valid-edn? site) false)))))
+      (is (= (f/valid-edn? site) false)))))
+
+(deftest no-name-returns-false
+  (testing "sites without a name key are invalid"
+    (let [site (f/load-site :invalid-site-with-no-name)]
+      (is (= (f/valid-edn? site) false)))))
+
+(deftest illegal-name-returns-false
+  (testing "sites with non-string name key are invalid"
+    (let [site (f/load-site :invalid-site-with-illegal-name)]
+      (is (= (f/valid-edn? site) false)))))

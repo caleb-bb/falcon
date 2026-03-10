@@ -129,11 +129,27 @@
 ;; ---- Validators ----
 
 (def legal-keys #{:name :base-url :auth :nav :extract :opts})
+(def required-keys #{:name :base-url})
+(def verbs #{:auth :nav :extract})
 
 (defn legal-keys? [edn]
   (let [edn-keys (set (keys edn))]
-   (set/subset? edn-keys legal-keys)))
+    (set/subset? edn-keys legal-keys)))
+
+(defn has-a-verb? [edn]
+  (let [edn-keys (set (keys edn))
+        edn-verbs (set/intersection edn-keys verbs)]
+    (not (empty? edn-verbs))))
+
+(defn includes-required-keys? [edn]
+  (let [edn-keys (set (keys edn))]
+    (set/subset? required-keys edn-keys)))
+
+(defn name-is-string? [edn]
+  (let [edn-name (get edn :name)]
+    (= (type edn-name) java.lang.String)))
+
+(def meets-requirements? (every-pred legal-keys? has-a-verb? includes-required-keys? name-is-string?))
 
 (defn valid-edn? [edn]
-  (-> edn
-      (legal-keys?)))
+  (meets-requirements? edn))
