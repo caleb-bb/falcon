@@ -1,5 +1,8 @@
 (ns falcon.extract
-  (:require [etaoin.api :as e]))
+  (:require [etaoin.api :as e]
+            [clj-http.client :as http]))
+
+;; ---- Web scraping verbs ----
 
 (defn- extract-field
   "Extract a single field value from a parent element.
