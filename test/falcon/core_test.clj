@@ -122,3 +122,18 @@
   (testing "sites with non-map opts key are invalid"
     (let [site (f/load-site :invalid-site-with-illegal-opts)]
       (is (= (f/valid-edn? site) false)))))
+
+(deftest illegal-auth-returns-false
+  (testing "sites with non-map auth key are invalid"
+    (let [site (f/load-site :invalid-site-with-illegal-auth)]
+      (is (= (f/valid-edn? site) false)))))
+
+(deftest illegal-extract-returns-false
+  (testing "sites with non-map extract key are invalid"
+    (let [site (f/load-site :invalid-site-with-illegal-extract)]
+      (is (= (f/valid-edn? site) false)))))
+
+(deftest illegal-nav-returns-false
+  (testing "sites with non-map nav key are invalid"
+    (let [site (f/load-site :invalid-site-with-illegal-nav)]
+      (is (= (f/valid-edn? site) false)))))

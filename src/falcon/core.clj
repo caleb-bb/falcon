@@ -161,10 +161,24 @@
   (let [edn-opts (get edn :opts)]
     (= (type edn-opts) clojure.lang.PersistentArrayMap)))
 
+(defn nav-is-map? [edn]
+  (let [edn-nav (get edn :nav {})]
+    (= (type edn-nav) clojure.lang.PersistentArrayMap)))
+
+(defn extract-is-map? [edn]
+  (let [edn-extract (get edn :extract {})]
+    (= (type edn-extract) clojure.lang.PersistentArrayMap)))
+
+(defn auth-is-map? [edn]
+  (let [edn-auth (get edn :auth {})]
+    (= (type edn-auth) clojure.lang.PersistentArrayMap)))
+
+
 (def meets-requirements?
   (every-pred
     legal-keys? has-a-verb? includes-required-keys?
-    name-is-string? base-url-is-env-or-string? opts-is-map?))
+    name-is-string? base-url-is-env-or-string? opts-is-map?
+    nav-is-map? extract-is-map? auth-is-map?))
 
 (defn valid-edn? [edn]
   (meets-requirements? edn))
