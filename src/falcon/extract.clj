@@ -34,3 +34,12 @@
   returns the text content of all matching elements as a vector of strings."
   [driver q]
   (mapv #(e/get-element-text-el driver %) (e/query-all driver q)))
+
+;; ---- Functions closer to raw http requests ----
+
+(defn body
+  "Retrieves the body of an http request"
+  [url]
+  (-> url
+      (http/get)
+      (get :body)))
