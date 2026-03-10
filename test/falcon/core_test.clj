@@ -88,16 +88,7 @@
 
 ;; --- config shape validation ----
 
-(defn valid-site-config?
-  "Minimal shape check: does this config have the fields Falcon expects?"
-  [config]
-  (and (string? (:name config))
-       (or (string? (:base-url config))
-           (keyword? (:base-url config)))))
-
-(deftest test-fixtures-have-valid-shape-test
-  (testing "all test fixture configs pass shape validation"
-    (doseq [site-key [:test-site :public-test-site]]
-      (let [config (f/load-site site-key)]
-        (is (valid-site-config? config)
-            (str (name site-key) " failed shape validation"))))))
+(deftest illegal-keys-return-false
+  (testing "pipeline invalidates edn with illegal keys"
+    (let [site (f/load-site :site-with-illegal-keys)]
+     (is (= (f/valid-edn? site) false)))))

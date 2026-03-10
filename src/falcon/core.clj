@@ -4,7 +4,8 @@
             [clojure.java.io :as io]
             [clojure.java.shell :as shell]
             [clojure.string :as str]
-            [clojure.walk :as walk]))
+            [clojure.walk :as walk]
+            [clojure.set :as set]))
 
 ;; ---- Config loading ----
 
@@ -124,3 +125,15 @@
          site (-> site-key load-site (resolve-env {:strict? strict?}))
          driver (start browser {:headless headless})]
      {:driver driver :site site})))
+
+;; ---- Validators ----
+
+(def legal-keys #{:name :base-url :auth :nav :extract :opts})
+
+(defn legal-keys? [edn]
+  (let [edn-keys (set (keys edn))]
+   (set/subset? edn-keys legal-keys)))
+
+(defn valid-edn? [edn]
+  (-> edn
+      (legal-keys?)))
