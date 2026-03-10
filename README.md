@@ -48,3 +48,38 @@ Not life-and-death but try to do this more-or-less. Not actual rules. More of wh
 - "Boyscouting", or the fixing of small issues unrelated to the main PR's stated goal, is encouraged. :-)
 - Please make use of LLMs or search engines instead of asking for translations of the Elizabethan terms in the FAQ. That's right, you snooty code-monkey, I demand literacy! Of books! With no code or equations!
 - Acting irreverent and smarmy is fine as long as everybody is having a good time and you're not being an actual jerk. Feel free to make snide remarks in your PRs and commit messages about me, my code, my cat, and my face. My stupid, *stupid* face.
+
+## Standards
+These are actual, spec-level constraints on the code.
+
+### Site `edn`s
+
+Falcon represents websites using `edn`s. The verbs in `Falcon.nav`, `Falcon.extract`, and `Falcon.auth` represent what the user wants to *do*. The site `edn`s represent a walkable graph that takes those verbs to their intended targets. The inner nodes of that graph are English words whose meaning is, hopefully, clear. The leaf nodes are maps that pick out the individual DOM elements we want to act on. The user inputs the inner nodes to represent their intentions. Falcon hides the leaf nodes from the user and consumes the inner nodes mechanically. This is the value proposition for Falcon as over and above [etaoin](https://github.com/clj-commons/etaoin): hide the implementation of individual dom elements, and make the path to those elements walkable via something close to English.
+
+These are the current guidelines for site `edn` structure. These are to be enforced by validation tests and, in some possible futures, property-based tests.
+
+There exists a *known set* of `:attr`s. This is a closed set that constrains what values the `:attr` key may have. 
+
+*Top-level shape*:
+
+1. Only six keys are allowed at the top level: `:name`, `:base-url`, `:opts`, `auth`, `:extract`, and `:nav`.
+2. `:name` is required and its value must be a string.
+3. `:base-url` is required and its value must be a string or an `:env/` keyword.
+4. `:opts` is required and its value must be a map.
+5. At least one of `:auth`, `:nav`, or `:extract` must be present and its value a map.
+
+*Intent trees (:nav and :extract)*:
+
+6. Interior nodes are maps.
+7. Every branch terminates at a leaf.
+8. A leaf is a map containing :q.
+9. `:q` is a map containing exactly one known locator type: `:css`, `:xpath`, `:tag`, `:id`, `:name`, `:class`.
+10. If `:q` contains `:css`, the value thereof must be a non-empty, non-whitespace string.
+11. `:attr`, if present on a leaf, is a member of the known set.
+
+*Auth shape, if present*:
+
+12. `:auth` must contain `:fields` and `:submit` for now. We'll deal with OAuth later.
+13. Each field under `:auth :fields` meets the criteria for a leaf node *and* has a `:value`
+14. The value of `:value` is either a string or an `:env/` keyword.
+
