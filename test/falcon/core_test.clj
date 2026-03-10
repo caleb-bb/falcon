@@ -88,7 +88,12 @@
 
 ;; --- config shape validation ----
 
+(deftest valid-test-site-passes-validation
+  (testing "pipeline validates legal site edn"
+   (let [site (f/load-site :test-site)]
+     (is (= (f/valid-edn? site) true)))))
+
 (deftest illegal-keys-return-false
   (testing "pipeline invalidates edn with illegal keys"
-    (let [site (f/load-site :site-with-illegal-keys)]
+    (let [site (f/load-site :invalid-site-with-illegal-keys)]
      (is (= (f/valid-edn? site) false)))))

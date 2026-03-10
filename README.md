@@ -83,3 +83,6 @@ There exists a *known set* of `:attr`s. This is a closed set that constrains wha
 13. Each field under `:auth :fields` meets the criteria for a leaf node *and* has a `:value`
 14. The value of `:value` is either a string or an `:env/` keyword.
 
+### Testing
+
+- Any site `edn` meant to return `false` from the validator must have a filename beginning with "invalid"
