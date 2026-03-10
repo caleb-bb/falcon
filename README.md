@@ -49,9 +49,10 @@ Not life-and-death but try to do this more-or-less. Not actual rules. More of wh
 - Please make use of LLMs or search engines instead of asking for translations of the Elizabethan terms in the FAQ. That's right, you snooty code-monkey, I demand literacy! Of books! With no code or equations!
 - Acting irreverent and smarmy is fine as long as everybody is having a good time and you're not being an actual jerk. Feel free to make snide remarks in your PRs and commit messages about me, my code, my cat, and my face. My stupid, *stupid* face.
 
-### Standards
+## Standards
+These are actual, spec-level constraints on the code.
 
-#### Site `edn`s
+### Site `edn`s
 
 Falcon represents websites using `edn`s. The verbs in `Falcon.nav`, `Falcon.extract`, and `Falcon.auth` represent what the user wants to *do*. The site `edn`s represent a walkable graph that takes those verbs to their intended targets. The inner nodes of that graph are English words whose meaning is, hopefully, clear. The leaf nodes are maps that pick out the individual DOM elements we want to act on. The user inputs the inner nodes to represent their intentions. Falcon hides the leaf nodes from the user and consumes the inner nodes mechanically. This is the value proposition for Falcon as over and above [etaoin](https://github.com/clj-commons/etaoin): hide the implementation of individual dom elements, and make the path to those elements walkable via something close to English.
 
