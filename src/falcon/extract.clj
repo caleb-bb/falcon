@@ -1,5 +1,8 @@
 (ns falcon.extract
-  (:require [etaoin.api :as e]))
+  (:require [etaoin.api :as e]
+            [clj-http.client :as http]))
+
+;; ---- Web scraping verbs ----
 
 (defn- extract-field
   "Extract a single field value from a parent element.
@@ -31,3 +34,21 @@
   returns the text content of all matching elements as a vector of strings."
   [driver q]
   (mapv #(e/get-element-text-el driver %) (e/query-all driver q)))
+
+;; ---- Functions closer to raw http requests ----
+
+(defn body
+  "Retrieves the body of an http request"
+  [url]
+  (-> url
+      (http/get)
+      (get :body)))
+
+;; ---- File i/o (primarily for convenience at this point) ----
+
+(defn save-site
+  "Retrieves html from a site and saves it to the site directory"
+  [url filename]
+  (-> url
+      (body)
+      (spit (str "/resources/html/" filename ".html"))))
