@@ -131,6 +131,7 @@
 (def legal-keys #{:name :base-url :auth :nav :extract :opts})
 (def required-keys #{:base-url :name :opts})
 (def verbs #{:auth :nav :extract})
+(def supported-attrs [:text :href :src :alt :value :title :class :id :inner-html :outer-html])
 
 (defn legal-keys? [edn]
   (let [edn-keys (set (keys edn))]
@@ -149,13 +150,12 @@
   (let [edn-name (get edn :name)]
     (= (type edn-name) java.lang.String)))
 
-
 (defn base-url-is-env-or-string? [edn]
   (let [edn-base-url (get edn :base-url)
         base-url-name (name edn-base-url)]
     (or
-        (= (type edn-base-url) java.lang.String)
-        (str/starts-with? base-url-name ":env/"))))
+     (= (type edn-base-url) java.lang.String)
+     (str/starts-with? base-url-name ":env/"))))
 
 (defn opts-is-map? [edn]
   (let [edn-opts (get edn :opts)]
@@ -173,12 +173,11 @@
   (let [edn-auth (get edn :auth {})]
     (= (type edn-auth) clojure.lang.PersistentArrayMap)))
 
-
 (def meets-requirements?
   (every-pred
-    legal-keys? has-a-verb? includes-required-keys?
-    name-is-string? base-url-is-env-or-string? opts-is-map?
-    nav-is-map? extract-is-map? auth-is-map?))
+   legal-keys? has-a-verb? includes-required-keys?
+   name-is-string? base-url-is-env-or-string? opts-is-map?
+   nav-is-map? extract-is-map? auth-is-map?))
 
 (defn valid-edn? [edn]
   (meets-requirements? edn))
