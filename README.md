@@ -52,37 +52,38 @@ Not life-and-death but try to do this more-or-less. Not actual rules. More of wh
 ## Standards
 These are actual, spec-level constraints on the code.
 
-### Site `edn`s
 
-Falcon represents websites using `edn`s. The verbs in `Falcon.nav`, `Falcon.extract`, and `Falcon.auth` represent what the user wants to *do*. The site `edn`s represent a walkable graph that takes those verbs to their intended targets. The inner nodes of that graph are English words whose meaning is, hopefully, clear. The leaf nodes are maps that pick out the individual DOM elements we want to act on. The user inputs the inner nodes to represent their intentions. Falcon hides the leaf nodes from the user and consumes the inner nodes mechanically. This is the value proposition for Falcon as over and above [etaoin](https://github.com/clj-commons/etaoin): hide the implementation of individual dom elements, and make the path to those elements walkable via something close to English.
+### Top-Level Shape Requirements for Site EDNs
 
-These are the current guidelines for site `edn` structure. These are to be enforced by validation tests and, in some possible futures, property-based tests.
+The top level of a site EDN is a flat map with a fixed set of allowed keys. These rules ensure that every site EDN has the required identifying metadata and at least one actionable section. Validation of the top-level shape catches missing keys, misspelled keys, and wrong value types before any deeper structural checks run.
 
-There exists a *known set* of `:attr`s. This is a closed set that constrains what values the `:attr` key may have. 
+1. Only six keys are allowed at the top level: `:name`, `:base-url`, `:opts`, `:auth`, `:extract`, and `:nav`. Any other key is a validation error (catches typos like `:naav`).
+2. `:name` is required. Its value must be a string.
+3. `:base-url` is required. Its value must be a string or an `:env/`-namespaced keyword.
+4. `:opts` is required. Its value must be a map.
+5. At least one of `:auth`, `:nav`, or `:extract` must be present, and its value must be a map.
 
-*Top-level shape*:
+### Leaf Node Structure in Site EDNs
 
-1. Only six keys are allowed at the top level: `:name`, `:base-url`, `:opts`, `auth`, `:extract`, and `:nav`.
-2. `:name` is required and its value must be a string.
-3. `:base-url` is required and its value must be a string or an `:env/` keyword.
-4. `:opts` is required and its value must be a map.
-5. At least one of `:auth`, `:nav`, or `:extract` must be present and its value a map.
+A leaf is a map that marks the boundary between the intent tree (navigated by the user at the REPL) and the function payload (consumed opaquely by Falcon functions). The presence of a `:q` key is what distinguishes a leaf from an interior node. Everything above the leaf in the intent tree is the user's concern; everything at and below the leaf is the consuming function's concern. A leaf has exactly three allowed top-level keys:
 
-*Intent trees (:nav and :extract)*:
+6. **`:q`** (required, map) — The DOM locator. Must contain exactly one key from the known locator set: `:css`, `:xpath`, `:tag`, `:id`, `:name`, `:class`. If the locator key is `:css`, its value must be a non-empty, non-whitespace string.
+7. **`:attr`** (optional, keyword) — What to extract from the located element. If present, must be a member of `falcon.core/supported-attrs`. If absent, the consuming function decides what to do with the element.
+8. **`:params`** (optional, map) — Opaque payload for the consuming function. The validator does not inspect its contents. Internal structure, including further nesting, is the consuming function's concern.
+9. No other top-level keys are permitted on a leaf. A key that is not `:q`, `:attr`, or `:params` is a validation error.
 
-6. Interior nodes are maps.
-7. Every branch terminates at a leaf.
-8. A leaf is a map containing :q.
-9. `:q` is a map containing exactly one known locator type: `:css`, `:xpath`, `:tag`, `:id`, `:name`, `:class`.
-10. If `:q` contains `:css`, the value thereof must be a non-empty, non-whitespace string.
-11. `:attr`, if present on a leaf, is a member of the known set.
+### Intent Tree Structure for `:nav` and `:extract`
 
-*Auth shape, if present*:
+The `:nav` and `:extract` values are intent trees — nested maps where key paths form human-readable descriptions of actions or targets. `resolve-intent` walks these trees to translate a keyword path into a leaf. The key path should read like a sentence fragment: `[:nav :search :profiles]` reads as "the nav search for profiles." The following rules ensure that intent trees are well-formed and that every path leads to a usable DOM binding.
 
-12. `:auth` must contain `:fields` and `:submit` for now. We'll deal with OAuth later.
-13. Each field under `:auth :fields` meets the criteria for a leaf node *and* has a `:value`
-14. The value of `:value` is either a string or an `:env/` keyword.
+10. Every non-leaf value in the tree must be a map. Bare primitives (strings, numbers, keywords, booleans) and empty maps are not permitted as values in the tree.
+11. Every path through the tree must terminate at a leaf. That is, recursive descent through map values must eventually reach a map containing `:q`.
 
-### Testing
+### Auth Shape Requirements
 
-- Any site `edn` meant to return `false` from the validator must have a filename beginning with "invalid"
+Auth is structurally similar to a nav action — it represents the intent "log in" with DOM bindings for form fields, a submit button, and a success indicator. It earns its own top-level key because it is a precondition for all other actions, it holds secrets (`:env/`-namespaced keywords), and it has distinctive success/failure semantics. These rules apply when `:auth` is present in the site EDN. OAuth and other non-form-based auth flows are out of scope for now.
+
+12. `:auth` must contain `:fields` (a map) and `:submit` (a leaf with `:q`).
+13. Each field under `:auth :fields` must satisfy all leaf node rules (rules 6–9) and must additionally contain a `:value` key.
+14. The value of `:value` must be either a string or an `:env/`-namespaced keyword.
+15. `:env/`-namespaced keywords must only appear inside `:auth`. Their presence anywhere else in the site EDN is a validation error.
