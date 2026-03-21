@@ -166,7 +166,10 @@
     (let [site (f/load-site :invalid-site-with-illegal-nav)]
       (is (= (f/valid-edn? site) false)))))
 
-
 (deftest valid-leaves-return-true
   (testing "leaves with correct structure are valid"
     (every? f/valid-leaf? valid-leaves)))
+
+(deftest invalid-leaves-return-false
+  (testing "leaves with incorrect structure are invalid"
+    (every? false? (map f/valid-leaf? invalid-leaves))))
