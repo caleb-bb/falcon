@@ -11,6 +11,34 @@
   (with-redefs [f/read-env (fn [var-name] (get env-map var-name))]
     (func)))
 
+; ---- Constants ----
+
+(def valid-leaves
+  [{:q {:css ".answer-text"} :attr :text}
+   {:q {:css "a.profile-link"} :attr :href}
+   {:q {:css "button.load-more"}}
+   {:q {:xpath "//div[@class='bio']//p[1]"} :attr :text}
+   {:q {:tag :input} :attr :value}
+   {:q {:id "search-input"}}
+   {:q {:css "input[name=email]"} :params {:value :env/USERNAME}}
+   {:q {:css "#search-input"} :params {:submit {:q {:css "button.search-go"}}}}
+   {:q {:name "avatar"} :attr :value}
+   {:q {:css ".rich-text-body"} :attr :inner-html}])
+
+(def invalid-leaves
+ [{:q {:css ".title"} :attrr :text}
+  {:attr :text :params {:value "hello"}}
+  {:q ".title" :attr :text}
+  {:q {:css ".title" :xpath "//div"} :attr :text}
+  {:q {:bogus "not a real locator"}}
+  {:q {:css "   "} :attr :text}
+  {:q {:css ".title"} :attr :flurbnax}
+  {:q {:css ".title"} :params "not a map"}])
+
+
+
+
+
 ;; ---- resolve-env ----
 
 ;; This will become property-based later.
@@ -137,3 +165,8 @@
   (testing "sites with non-map nav key are invalid"
     (let [site (f/load-site :invalid-site-with-illegal-nav)]
       (is (= (f/valid-edn? site) false)))))
+
+
+(deftest valid-leaves-return-true
+  (testing "leaves with correct structure are valid"
+    (every? f/valid-leaf? valid-leaves)))

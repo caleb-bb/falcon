@@ -131,7 +131,24 @@
 (def legal-keys #{:name :base-url :auth :nav :extract :opts})
 (def required-keys #{:base-url :name :opts})
 (def verbs #{:auth :nav :extract})
-(def supported-attrs [:text :href :src :alt :value :title :class :id :inner-html :outer-html])
+
+(def locator-types #{:css :xpath :tag :fn :id})
+(def supported-attrs #{:text :href :src :alt :value :title :class :id :inner-html :outer-html})
+(def legal-leaf-keys #{:q :attr :params})
+
+(defn valid-leaf? [{:keys [q attr params] :as leaf}]
+  (and (contains? leaf :q)
+       (set/subset? (set (keys leaf)) legal-leaf-keys)
+       (map? q)
+       (= 1 (count q))
+       (let [[loc-type loc-val] (first q)]
+         (and (contains? locator-types loc-type)
+              (if (= :css loc-type)
+                (and (string? loc-val)
+                     (not (str/blank? loc-val)))
+                true)))
+       (or (nil? attr) (contains? supported-attrs attr))
+       (or (nil? params) (map? params))))
 
 (defn legal-keys? [edn]
   (let [edn-keys (set (keys edn))]
