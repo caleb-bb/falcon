@@ -87,3 +87,20 @@ Auth is structurally similar to a nav action — it represents the intent "log i
 13. Each field under `:auth :fields` must satisfy all leaf node rules (rules 6–9) and must additionally contain a `:value` key.
 14. The value of `:value` must be either a string or an `:env/`-namespaced keyword.
 15. `:env/`-namespaced keywords must only appear inside `:auth`. Their presence anywhere else in the site EDN is a validation error.
+
+
+
+### Leaf Algorithm
+
+A leaf node has this form: 
+{:q {:locator-type locator} 
+    :attr some_attr
+    :params some_map}
+
+A valid leaf:
+0. Has a set of keys containing `:q`
+1. Has some subset of {`:q`, `:attrs`, `:params`} for its keys
+2. Has a value for `:q` that is a map (call it the q-map)
+3. has a qmap with exactly one key that is in `locator-types`; if that key is `:css`, its value is a non-blank, nonempty string
+4. If it has attr as a key, maps attr to one of `#{:text :href :src :alt :value :title :class :id :inner-html :outer-html}`
+5. If it has :params as a key, the value of `params` is a map 
