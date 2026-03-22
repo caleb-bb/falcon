@@ -1,5 +1,6 @@
 (ns falcon.nav
-  (:require [etaoin.api :as e]))
+  (:require [etaoin.api :as e]
+            [falcon.core :as core]))
 
 (defn- count-elements
   "Count how many elements currently match a query."
@@ -11,6 +12,13 @@
   [driver done-el]
   (when done-el
     (e/exists? driver done-el)))
+
+(defn click [{:keys [driver site]} path opts]
+  (let [leaf (core/resolve-intent site path)]
+    (println leaf)
+    (e/click driver (:q leaf))))
+
+
 
 (defn scroll-until!
   "Scroll the page according to the site's :nav :scroll config
