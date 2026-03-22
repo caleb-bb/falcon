@@ -1,7 +1,5 @@
 {:name "The Internet"
- :base-url "https://www.test.com"
+ :base-url "https://the-internet.herokuapp.com"
  :nav
  {:click
-  {:nth
-   {:q {:css "ul.tab-nav li a"}
-    :param {:indexed true}}}}}
+   {:q {:css "a[href='/abtest']"}}}}

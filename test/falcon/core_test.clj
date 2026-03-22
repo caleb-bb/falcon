@@ -26,18 +26,14 @@
    {:q {:css ".rich-text-body"} :attr :inner-html}])
 
 (def invalid-leaves
- [{:q {:css ".title"} :attrr :text}
-  {:attr :text :params {:value "hello"}}
-  {:q ".title" :attr :text}
-  {:q {:css ".title" :xpath "//div"} :attr :text}
-  {:q {:bogus "not a real locator"}}
-  {:q {:css "   "} :attr :text}
-  {:q {:css ".title"} :attr :flurbnax}
-  {:q {:css ".title"} :params "not a map"}])
-
-
-
-
+  [{:q {:css ".title"} :attrr :text}
+   {:attr :text :params {:value "hello"}}
+   {:q ".title" :attr :text}
+   {:q {:css ".title" :xpath "//div"} :attr :text}
+   {:q {:bogus "not a real locator"}}
+   {:q {:css "   "} :attr :text}
+   {:q {:css ".title"} :attr :flurbnax}
+   {:q {:css ".title"} :params "not a map"}])
 
 ;; ---- resolve-env ----
 

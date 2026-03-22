@@ -21,10 +21,10 @@
   Example: (load-site :example-site)"
   [site-key]
   (let [filename (str "sites/" (str/lower-case (name site-key)) ".edn")]
-      (-> filename
-           io/resource
-           slurp
-           edn/read-string)))
+    (-> filename
+        io/resource
+        slurp
+        edn/read-string)))
 
 (defn resolve-env
   "Walk a site config and replace any :env/VAR_NAME values with the
@@ -108,14 +108,37 @@
   [driver]
   (e/quit driver))
 
+(defn resolve-intent
+  "Walk a site config by intent path.
+   Returns the leaf node (DOM binding) at the end of the path.
+   Throws with helpful error if any key in the path doesn't exist."
+  [site path]
+  (loop [node site
+         remaining path
+         walked []]
+    (if (empty? remaining)
+      node
+      (let [k (first remaining)
+            next-node (get node k)]
+        (if (nil? next-node)
+          (throw (ex-info
+                  (str "Site \"" (:name site) "\" has no "
+                       (name k) " at path " (conj walked k)
+                       ". Available: " (vec (keys node)))
+                  {:site (:name site)
+                   :path (conj walked k)
+                   :available (vec (keys node))}))
+          (recur next-node (rest remaining) (conj walked k)))))))
+
 ;; ---- Convenience: full session ----
 
 (defn session
-  "Load a site config, resolve env vars, start a browser, return both.
-  Browser defaults to *default-browser* defaults to :chrome.
-  Pass {:strict? false} in env-opt to allow missing env vars (useful
+  "load a site config, resolve env vars, start a browser, navigate to
+  the site's :base-url, and return both driver and config.
+  browser defaults to *default-browser* defaults to :chrome.
+  pass {:strict? false} in env-opt to allow missing env vars (useful
   for messing with config).
-  REPL usage:
+  repl usage:
       (def s (session :example-site))
       (:driver s) ;; the etaoin driver
       (:site s)   ;; the resolved config map"
@@ -125,7 +148,13 @@
           :or {browser :chrome headless true strict? true}} opts
          site (-> site-key load-site (resolve-env {:strict? strict?}))
          driver (start browser {:headless headless})]
+     (when-let [url (:base-url site)]
+       (e/go driver url))
      {:driver driver :site site})))
+
+(defn see-inner [driver leaf]
+  (->> (e/query-all driver (:q leaf))
+       (mapv #(e/get-element-inner-html-el driver %))))
 
 ;; ---- Validators ----
 
@@ -143,11 +172,10 @@
        (map? q)
        (= 1 (count q))
        (let [[loc-type loc-val] (first q)]
-         (and (contains? locator-types loc-type)
-              (if (= :css loc-type)
-                (and (string? loc-val)
-                     (not (str/blank? loc-val)))
-                true)))
+         (and (contains? locator-types loc-type)              (if (= :css loc-type)
+                                                                (and (string? loc-val)
+                                                                     (not (str/blank? loc-val)))
+                                                                true)))
        (or (nil? attr) (contains? supported-attrs attr))
        (or (nil? params) (map? params))))
 
