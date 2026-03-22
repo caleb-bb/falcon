@@ -20,10 +20,11 @@
   Returns the raw config map with :env/ keywords unresolved.
   Example: (load-site :example-site)"
   [site-key]
-  (->  (str "sites/" (name site-key) ".edn")
-       io/resource
-       slurp
-       edn/read-string))
+  (let [filename (str "sites/" (str/lower-case (name site-key)) ".edn")]
+      (-> filename
+           io/resource
+           slurp
+           edn/read-string)))
 
 (defn resolve-env
   "Walk a site config and replace any :env/VAR_NAME values with the
