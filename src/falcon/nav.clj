@@ -18,8 +18,6 @@
     (println leaf)
     (e/click driver (:q leaf))))
 
-
-
 (defn scroll-until!
   "Scroll the page according to the site's :nav :scroll config
   For :infinite strategy: scrolls to bottom, waits for new content to load,

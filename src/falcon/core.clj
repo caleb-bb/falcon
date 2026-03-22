@@ -21,10 +21,10 @@
   Example: (load-site :example-site)"
   [site-key]
   (let [filename (str "sites/" (str/lower-case (name site-key)) ".edn")]
-      (-> filename
-           io/resource
-           slurp
-           edn/read-string)))
+    (-> filename
+        io/resource
+        slurp
+        edn/read-string)))
 
 (defn resolve-env
   "Walk a site config and replace any :env/VAR_NAME values with the
@@ -122,24 +122,23 @@
             next-node (get node k)]
         (if (nil? next-node)
           (throw (ex-info
-                   (str "Site \"" (:name site) "\" has no "
-                        (name k) " at path " (conj walked k)
-                        ". Available: " (vec (keys node)))
-                   {:site (:name site)
-                    :path (conj walked k)
-                    :available (vec (keys node))}))
+                  (str "Site \"" (:name site) "\" has no "
+                       (name k) " at path " (conj walked k)
+                       ". Available: " (vec (keys node)))
+                  {:site (:name site)
+                   :path (conj walked k)
+                   :available (vec (keys node))}))
           (recur next-node (rest remaining) (conj walked k)))))))
-
 
 ;; ---- Convenience: full session ----
 
 (defn session
-  "Load a site config, resolve env vars, start a browser, navigate to
+  "load a site config, resolve env vars, start a browser, navigate to
   the site's :base-url, and return both driver and config.
-  Browser defaults to *default-browser* defaults to :chrome.
-  Pass {:strict? false} in env-opt to allow missing env vars (useful
+  browser defaults to *default-browser* defaults to :chrome.
+  pass {:strict? false} in env-opt to allow missing env vars (useful
   for messing with config).
-  REPL usage:
+  repl usage:
       (def s (session :example-site))
       (:driver s) ;; the etaoin driver
       (:site s)   ;; the resolved config map"
@@ -173,11 +172,10 @@
        (map? q)
        (= 1 (count q))
        (let [[loc-type loc-val] (first q)]
-         (and (contains? locator-types loc-type)
-              (if (= :css loc-type)
-                (and (string? loc-val)
-                     (not (str/blank? loc-val)))
-                true)))
+         (and (contains? locator-types loc-type)              (if (= :css loc-type)
+                                                                (and (string? loc-val)
+                                                                     (not (str/blank? loc-val)))
+                                                                true)))
        (or (nil? attr) (contains? supported-attrs attr))
        (or (nil? params) (map? params))))
 
