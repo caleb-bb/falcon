@@ -2,10 +2,9 @@
  :base-url "https://example.com"
  :nav
  {:scroll
-  {:strategy :infinite
-   :wait-el {:css ".item"}
-   :max-scrolls 5
-   :pause-ms 500}}
+  {:infinite {:wait-el {:q {:css ".item"}}}}}
  :extract
  {:container {:css ".item"}
-  :fields {:title {:q {:css "h2"} :attr :text}}}}
+  :fields {:title {:q {:css "h2"} :attr :text}}}
+ :opts
+ {:scroll {:max-scrolls 5 :pause-ms 500}}}
