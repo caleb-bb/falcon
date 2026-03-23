@@ -98,7 +98,8 @@
       (is (= "Test Site" (:name site)))
       (is (= :env/TEST_LOGIN_URL (get-in site [:auth :login-url]))
           "env keywords should be unresolved after load-site")
-      (is (= :infinite (get-in site [:nav :scroll :strategy]))))))
+      (is (some? (get-in site [:nav :scroll :infinite]))
+          "nav scroll infinite should exist"))))
 
 (deftest load-site-public-no-env-test
   (testing "public fixture loads with no :env/ keywords"
