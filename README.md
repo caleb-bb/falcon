@@ -43,10 +43,10 @@ The etaoin driver is always directly accessible. When Falcon's abstractions don'
 
 ### Site EDNs
 
-A site EDN has six top-level keys:
+A site EDN has two required and four optional keys.
 
-- **`:name`** — Human-readable site name.
-- **`:base-url`** — The site's root URL (string or `:env/` keyword).
+- **`:name`** — Human-readable site name. **REQUIRED**.
+- **`:base-url`** — The site's root URL (string or `:env/` keyword) **REQUIRED**.
 - **`:auth`** — Login flow: URL, form fields, submit button, success indicator. The only place `:env/`-namespaced keywords (secrets) may appear.
 - **`:nav`** — Registry of named navigation actions, organized by verb (`:click`, `:scroll`, `:search`, `:paginate`). Interior nodes are human-readable intent paths; leaf nodes are DOM bindings with a `:q` key.
 - **`:extract`** — Registry of named extractable things, each with a container selector and field mappings.
@@ -63,6 +63,21 @@ Every intent path in the EDN terminates at a leaf — a map with a `:q` key cont
 ```
 
 The `:q` map holds exactly one locator type (`:css`, `:xpath`, `:tag`, `:id`, `:name`, `:class`). An optional `:attr` key says what to extract from the element. An optional `:params` key holds function-specific payload (like a submit button for a search field). Behavioral parameters like pause durations never appear on leaves — they live in `:opts`.
+
+The brute syntax says A leaf node has this form: 
+
+```clojure
+{:q {:locator-type locator} :attr some_attr :params some_map}
+```
+
+
+A valid leaf:
+0. Has a set of keys containing `:q`
+1. Has some subset of {`:q`, `:attrs`, `:params`} for its keys
+2. Has a value for `:q` that is a map (call it the q-map)
+3. has a qmap with exactly one key that is in `locator-types`; if that key is `:css`, its value is a non-blank, nonempty string
+4. If it has attr as a key, maps attr to one of `#{:text :href :src :alt :value :title :class :id :inner-html :outer-html}`
+5. If it has :params as a key, the value of `params` is a map 
 
 ## Future direction
 
