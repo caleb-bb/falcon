@@ -7,6 +7,12 @@
             [clojure.walk :as walk]
             [clojure.set :as set]))
 
+;; ---- Public HOFs ----
+
+(defn leaf-map [driver leaf f]
+  (let [els (e/query-all driver (:q leaf))]
+    (mapv #(f driver %) els)))
+
 ;; ---- Config loading ----
 
 (defn read-env
@@ -83,11 +89,11 @@
 
 ;; ---- Browser lifecycle ----
 
-(def ^:dynamic *default-browser* :chrome)
+(def ^:dynamic *default-browser* :firefox)
 
 (defn start
-  "Start a browser driver. Browser type defaults to :chrome.
-  Options are passed through to etaoin. Headless by default;
+  "Start a browser driver. Browser type defaults to :firefox.
+  Options are passed through to etaoin. Headless by default.
   pass {:headless false} to watch.
   Returns the browser."
   ([] (start *default-browser* {}))
@@ -197,27 +203,26 @@
     (= (type edn-name) java.lang.String)))
 
 (defn base-url-is-env-or-string? [edn]
-  (let [edn-base-url (get edn :base-url)
-        base-url-name (name edn-base-url)]
+  (let [edn-base-url (get edn :base-url)]
     (or
      (= (type edn-base-url) java.lang.String)
-     (str/starts-with? base-url-name ":env/"))))
+     (= "env" (namespace edn-base-url)))))
 
 (defn opts-is-map? [edn]
-  (let [edn-opts (get edn :opts)]
-    (= (type edn-opts) clojure.lang.PersistentArrayMap)))
+  (let [edn-opts (get edn :opts {})]
+    (map? edn-opts)))
 
 (defn nav-is-map? [edn]
   (let [edn-nav (get edn :nav {})]
-    (= (type edn-nav) clojure.lang.PersistentArrayMap)))
+    (map? edn-nav)))
 
 (defn extract-is-map? [edn]
   (let [edn-extract (get edn :extract {})]
-    (= (type edn-extract) clojure.lang.PersistentArrayMap)))
+    (map? edn-extract)))
 
 (defn auth-is-map? [edn]
   (let [edn-auth (get edn :auth {})]
-    (= (type edn-auth) clojure.lang.PersistentArrayMap)))
+    (map? edn-auth)))
 
 (def meets-requirements?
   (every-pred
