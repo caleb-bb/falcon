@@ -1,7 +1,8 @@
 (ns falcon.extract
   (:require [etaoin.api :as e]
             [clj-http.client :as http]
-            [falcon.core :as core]))
+            [falcon.core :as core]
+            [clojure.string :as str]))
 
 ;; ---- API ----
 
@@ -19,20 +20,29 @@
   [driver q]
   (mapv #(e/get-element-text-el driver %) (e/query-all driver q)))
 
-;; ---- Functions closer to raw http requests ----
+;; ---- Basic YAGNI-ware for i/o ----
 
-(defn body
-  "Retrieves the body of an http request"
-  [url]
-  (-> url
-      (http/get)
-      (get :body)))
+(defn save-content
+  "GET a URL, save the body as [hash].[ext], and write a companion .edn metadata file.
+  Returns the metadata map on success, or the response map on failure."
+  [url ext]
+  (let [resp (http/get url {:throw-exceptions false})]
+    (if (<= 200 (:status resp) 299)
+      (let [body      (:body resp)
+            hash      (-> body .getBytes
+                          (java.security.MessageDigest/getInstance "SHA-256")
+                          (.digest)
+                          (->> (map #(format "%02x" %))
+                               (apply str)))
+            filename  (str hash "." ext)
+            file-path (str "resources/html/" filename)
+            _         (spit file-path body)
+            metadata  {:url       url
+                       :hash      hash
+                       :file-path file-path
+                       :format    ext
+                       :file-size (count body)}]
+        (spit (str "resources/html/" hash ".edn") (pr-str metadata))
+        metadata)
+      resp)))
 
-;; ---- File i/o (primarily for convenience at this point) ----
-
-(defn save-site
-  "Retrieves html from a site and saves it to the site directory"
-  [url filename]
-  (-> url
-      (body)
-      (spit (str "resources/html/" filename ".html"))))
