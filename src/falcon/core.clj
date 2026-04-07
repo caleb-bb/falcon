@@ -147,7 +147,12 @@
   repl usage:
       (def s (session :example-site))
       (:driver s) ;; the etaoin driver
-      (:site s)   ;; the resolved config map"
+      (:site s)   ;; the resolved config map
+      Quick start:
+      (require '[falcon.core :as c] '[falcon.extract :as x])  
+      (def s (c/session :ameriwater {:browser :firefox}))
+    (falcon.extract/all-attr s [:product-manual] :href)
+  To begin."
   ([site-key] (session site-key {}))
   ([site-key opts]
    (let [{:keys [browser headless strict?]
@@ -161,6 +166,9 @@
 (defn see-inner [driver leaf]
   (->> (e/query-all driver (:q leaf))
        (mapv #(e/get-element-inner-html-el driver %))))
+
+
+;; 
 
 ;; ---- Validators ----
 

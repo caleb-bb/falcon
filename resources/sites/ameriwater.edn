@@ -1,0 +1,10 @@
+{:name "ameriwater"
+ :base-url "https://www.ameriwater.com/product-manuals"
+ :extract
+    {:product-manual
+     {:q 
+        {:css "div.main-content.content-area a[href$='.pdf']"}
+        :attr :href}}
+ :opts
+    {:suffixes ["product-manuals"]}}
+

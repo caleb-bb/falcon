@@ -1,0 +1,6 @@
+{:name "hn"
+ :base-url "https://news.ycombinator.com"
+ :extract {:comment {:q {:class "commtext c00"}}}
+ :opts
+    {:suffixes ["item?id=47601859"]}}
+

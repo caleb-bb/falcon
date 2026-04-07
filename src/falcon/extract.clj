@@ -12,7 +12,15 @@
   (let [driver (:driver session)
         site   (:site session)
         leaf   (core/resolve-intent (get-in site [:extract]) intent-path)]
-    (core/leaf-map driver leaf e/get-element-text-el)))
+    (core/leaf-map driver leaf #(e/get-element-text-el))))
+
+(defn all-attr
+  "Extract an attribute from all matching elements to a vector"
+  [session intent-path attr]
+  (let [driver (:driver session)
+        site   (:site session)
+        leaf   (core/resolve-intent (get-in site [:extract]) intent-path)]
+    (core/leaf-map driver leaf (fn [driver el] (e/get-element-attr-el driver el (name attr))))))
 
 (defn raw
   "Ad-hoc extraction helper for the REPL. Takes a CSS/XPath query and
@@ -22,10 +30,12 @@
 
 ;; ---- Basic YAGNI-ware for i/o ----
 
-(defn save-content
+
+
+(defn save-one
   "GET a URL, save the body as [hash].[ext], and write a companion .edn metadata file.
   Returns the metadata map on success, or the response map on failure."
-  [url ext]
+  [ext url]
   (let [resp (http/get url {:throw-exceptions false})]
     (if (<= 200 (:status resp) 299)
       (let [body      (:body resp)
@@ -46,3 +56,7 @@
         metadata)
       resp)))
 
+(defn save-many
+  "As save-one, but takes a list of urls and assumes all have the same extension"
+  [urls ext]
+  (mapv #(save-one ext %) urls))
