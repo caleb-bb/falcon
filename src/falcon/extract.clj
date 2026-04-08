@@ -30,8 +30,6 @@
 
 ;; ---- Basic YAGNI-ware for i/o ----
 
-
-
 (defn save-one
   "GET a URL, save the body as [hash].[ext], and write a companion .edn metadata file.
   Returns the metadata map on success, or the response map on failure."
@@ -39,20 +37,23 @@
   (let [resp (http/get url {:throw-exceptions false})]
     (if (<= 200 (:status resp) 299)
       (let [body      (:body resp)
-            hash      (-> body .getBytes
-                          (java.security.MessageDigest/getInstance "SHA-256")
-                          (.digest)
-                          (->> (map #(format "%02x" %))
-                               (apply str)))
-            filename  (str hash "." ext)
-            file-path (str "resources/html/" filename)
-            _         (spit file-path body)
+            digest    (java.security.MessageDigest/getInstance "SHA-256")
+            hash      (->> (.digest digest (.getBytes body))
+                           (map #(format "%02x" %))
+                           (apply str))
+            data-filename  (str hash "." ext)
+            meta-filename  (str hash "." "edn")
+            data-file-path (str "resources/html/" data-filename)
+            meta-file-path (str "resources/html/" meta-filename)
+            _         (clojure.java.io/make-parents data-file-path)
+            _         (spit data-file-path body)
             metadata  {:url       url
                        :hash      hash
-                       :file-path file-path
+                       :file-path data-file-path
                        :format    ext
                        :file-size (count body)}]
-        (spit (str "resources/html/" hash ".edn") (pr-str metadata))
+        
+        (spit meta-file-path (pr-str metadata))
         metadata)
       resp)))
 
