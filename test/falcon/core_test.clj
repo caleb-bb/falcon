@@ -174,3 +174,54 @@
     (doseq [leaf invalid-leaves]
       (is (not (f/valid-leaf? leaf))
           (str "expected invalid: " (pr-str leaf))))))
+
+;; ---- resolve-intent ----
+
+(def sample-tree
+  {:scroll
+   {:infinite {:wait-el {:q {:css ".feed-item"}}
+               :done-el {:q {:css ".end-of-feed"}}}}
+   :click
+   {:comments {:q {:css "a.comments-tab"}}
+    :replies  {:q {:css "a.replies-tab"}}}})
+
+(deftest resolve-intent-full-path-test
+  (testing "full path returns the leaf node"
+    (is (= {:q {:css "a.comments-tab"}}
+           (f/resolve-intent sample-tree [:click :comments])))))
+
+(deftest resolve-intent-partial-path-test
+  (testing "partial path returns the subtree"
+    (is (= {:comments {:q {:css "a.comments-tab"}}
+            :replies  {:q {:css "a.replies-tab"}}}
+           (f/resolve-intent sample-tree [:click])))))
+
+(deftest resolve-intent-empty-path-test
+  (testing "empty path returns the whole node"
+    (is (= sample-tree
+           (f/resolve-intent sample-tree [])))))
+
+(deftest resolve-intent-deep-path-test
+  (testing "walking deeper than two levels returns nested value"
+    (is (= {:q {:css ".feed-item"}}
+           (f/resolve-intent sample-tree [:scroll :infinite :wait-el])))))
+
+(deftest resolve-intent-missing-first-key-test
+  (testing "missing key at first level throws with available keys"
+    (let [ex (try
+               (f/resolve-intent sample-tree [:bogus :whatever])
+               nil
+               (catch clojure.lang.ExceptionInfo e e))]
+      (is (some? ex) "expected an exception")
+      (is (= [:bogus] (:path (ex-data ex))))
+      (is (some #{:scroll :click} (:available (ex-data ex)))))))
+
+(deftest resolve-intent-missing-deep-key-test
+  (testing "missing key at deeper level includes walked path in ex-data"
+    (let [ex (try
+               (f/resolve-intent sample-tree [:click :nonexistent])
+               nil
+               (catch clojure.lang.ExceptionInfo e e))]
+      (is (some? ex) "expected an exception")
+      (is (= [:click :nonexistent] (:path (ex-data ex))))
+      (is (some #{:comments :replies} (:available (ex-data ex)))))))
