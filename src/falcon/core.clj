@@ -165,7 +165,7 @@
 
 (defn see-inner [driver leaf]
   (->> (e/query-all driver (:q leaf))
-       (mapv #(e/get-element-inner-html-el driver %))))
+       (mapv e/get-element-inner-html-el driver)))
 
 ;; 
 
