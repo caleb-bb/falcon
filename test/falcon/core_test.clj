@@ -165,8 +165,12 @@
 
 (deftest valid-leaves-return-true
   (testing "leaves with correct structure are valid"
-    (every? f/valid-leaf? valid-leaves)))
+    (doseq [leaf valid-leaves]
+      (is (f/valid-leaf? leaf)
+          (str "expected valid: " (pr-str leaf))))))
 
 (deftest invalid-leaves-return-false
   (testing "leaves with incorrect structure are invalid"
-    (every? false? (map f/valid-leaf? invalid-leaves))))
+    (doseq [leaf invalid-leaves]
+      (is (not (f/valid-leaf? leaf))
+          (str "expected invalid: " (pr-str leaf))))))

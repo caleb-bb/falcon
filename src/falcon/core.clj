@@ -167,7 +167,6 @@
   (->> (e/query-all driver (:q leaf))
        (mapv #(e/get-element-inner-html-el driver %))))
 
-
 ;; 
 
 ;; ---- Validators ----
@@ -176,7 +175,7 @@
 (def required-keys #{:base-url :name :opts})
 (def verbs #{:auth :nav :extract})
 
-(def locator-types #{:css :xpath :tag :fn :id})
+(def locator-types #{:css :xpath :tag :fn :id :class :name})
 (def supported-attrs #{:text :href :src :alt :value :title :class :id :inner-html :outer-html})
 (def legal-leaf-keys #{:q :attr :params})
 
@@ -186,10 +185,11 @@
        (map? q)
        (= 1 (count q))
        (let [[loc-type loc-val] (first q)]
-         (and (contains? locator-types loc-type)              (if (= :css loc-type)
-                                                                (and (string? loc-val)
-                                                                     (not (str/blank? loc-val)))
-                                                                true)))
+         (and (contains? locator-types loc-type)
+              (if (= :css loc-type)
+                (and (string? loc-val)
+                     (not (str/blank? loc-val)))
+                true)))
        (or (nil? attr) (contains? supported-attrs attr))
        (or (nil? params) (map? params))))
 
