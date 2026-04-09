@@ -30,7 +30,7 @@
 
 ;; ---- Basic YAGNI-ware for i/o ----
 
-(def default-save-dir "resources/html/")
+(def default-save-dir "scraped/")
 
 (defn save-one
   "GET a URL, save the body as [hash].[ext] file.

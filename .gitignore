@@ -29,6 +29,7 @@ classes/
 
 # Scrape output
 output/
+scraped/
 
 # Debug screenshots
 *.png
