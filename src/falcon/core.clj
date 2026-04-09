@@ -151,7 +151,7 @@
       Quick start:
       (require '[falcon.core :as c] '[falcon.extract :as x])  
       (def s (c/session :ameriwater {:browser :firefox}))
-    (falcon.extract/all-attr s [:product-manual] :href)
+    (def urls (falcon.extract/all-attr s [:product-manual] :href))
   To begin."
   ([site-key] (session site-key {}))
   ([site-key opts]
