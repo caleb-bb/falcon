@@ -17,7 +17,7 @@
         (run! io/delete-file (reverse (file-seq dir)))))))
 
 (defn- fake-response [status body]
-  {:status status :body body :headers {}})
+  {:status status :body (.getBytes body) :headers {}})
 
 ;; ---- save-one ----
 

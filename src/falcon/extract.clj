@@ -32,30 +32,72 @@
 
 (def default-save-dir "scraped/")
 
+(def retryable-status? #{429 500 502 503 504})
+
+(defn- retry-delay-ms
+  [resp attempt]
+  (if-let [retry-after (get-in resp [:headers "Retry-After"])]
+    (* 1000 (parse-long retry-after))
+    (* 1000 (long (Math/pow 2 attempt)))))
+
+(defn- http-get-with-retry
+  "GET with retries on transient failures. Returns the first 2xx response,
+  or the last failed response after exhausting retries.
+  Options are passed through to clj-http."
+  [url max-retries opts]
+  (loop [attempt 0]
+    (let [resp (http/get url (merge {:throw-exceptions false} opts))]
+      (cond
+        (<= 200 (:status resp) 299)
+        resp
+
+        (and (retryable-status? (:status resp))
+             (< attempt max-retries))
+        (let [delay (retry-delay-ms resp attempt)]
+          (println (str "Retry " (inc attempt) "/" max-retries
+                        " for " url " (HTTP " (:status resp)
+                        "), waiting " delay "ms"))
+          (Thread/sleep delay)
+          (recur (inc attempt)))
+
+        :else
+        (do (println (str "Failed to fetch " url " — HTTP " (:status resp)))
+            resp)))))
+
+(defn- hash-bytes
+  "SHA-256 hex digest of a byte array."
+  [^bytes ba]
+  (let [digest (java.security.MessageDigest/getInstance "SHA-256")]
+    (->> (.digest digest ba)
+         (map #(format "%02x" %))
+         (apply str))))
+
+(defn- write-bytes
+  "Write a byte array to path, creating parent dirs as needed."
+  [path ^bytes ba]
+  (clojure.java.io/make-parents path)
+  (with-open [out (clojure.java.io/output-stream path)]
+    (.write out ba)))
+
 (defn save-one
   "GET a URL, save the body as [hash].[ext] file.
   Returns the file path on success, or the response map on failure."
   ([ext url] (save-one ext url default-save-dir))
   ([ext url directory-path]
-   (let [resp (http/get url {:throw-exceptions false})]
+   (let [resp (http-get-with-retry url 3 {:as :byte-array})]
      (if (<= 200 (:status resp) 299)
        (let [body           (:body resp)
-             digest         (java.security.MessageDigest/getInstance "SHA-256")
-             hash           (->> (.digest digest (.getBytes body))
-                                 (map #(format "%02x" %))
-                                 (apply str))
+             hash           (hash-bytes body)
              data-filename  (str hash "." ext)
              data-file-path (str directory-path data-filename)]
          (if (.exists (clojure.java.io/file data-file-path))
            (do (println (str "File with hash " hash " already exists: " data-file-path))
                data-file-path)
-           (do (clojure.java.io/make-parents data-file-path)
-               (spit data-file-path body)
+           (do (write-bytes data-file-path body)
                data-file-path)))
        resp))))
 
 (defn save-many
-  "As save-one, but takes a list of urls and assumes all have the same extension."
   ([urls ext] (save-many urls ext default-save-dir))
   ([urls ext directory-path]
    (mapv #(save-one ext % directory-path) urls)))
@@ -65,13 +107,10 @@
   Returns the metadata map on success, or the response map on failure."
   ([ext url] (save-one-with-edn ext url default-save-dir))
   ([ext url directory-path]
-   (let [resp (http/get url {:throw-exceptions false})]
+   (let [resp (http-get-with-retry url 3 {:as :byte-array})]
      (if (<= 200 (:status resp) 299)
        (let [body           (:body resp)
-             digest         (java.security.MessageDigest/getInstance "SHA-256")
-             hash           (->> (.digest digest (.getBytes body))
-                                 (map #(format "%02x" %))
-                                 (apply str))
+             hash           (hash-bytes body)
              data-filename  (str hash "." ext)
              meta-filename  (str hash ".edn")
              data-file-path (str directory-path data-filename)
@@ -80,18 +119,16 @@
                              :hash      hash
                              :file-path data-file-path
                              :format    ext
-                             :file-size (count body)}]
+                             :file-size (alength body)}]
          (if (.exists (clojure.java.io/file data-file-path))
            (do (println (str "File with hash " hash " already exists: " data-file-path))
                metadata)
-           (do (clojure.java.io/make-parents data-file-path)
-               (spit data-file-path body)
+           (do (write-bytes data-file-path body)
                (spit meta-file-path (pr-str metadata))
                metadata)))
        resp))))
 
 (defn save-many-with-edns
-  "As save-one-with-edn, but takes a list of urls and assumes all have the same extension."
   ([urls ext] (save-many-with-edns urls ext default-save-dir))
   ([urls ext directory-path]
    (mapv #(save-one-with-edn ext % directory-path) urls)))
