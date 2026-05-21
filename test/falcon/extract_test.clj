@@ -32,17 +32,17 @@
             (is (.exists (io/file path)))
             (is (= "hello world" (slurp path)))))))))
 
-(deftest save-one-deterministic-hash-test
-  (testing "same body produces the same filename"
+(deftest save-one-deterministic-url-test
+  (testing "same URL produces the same filename"
     (with-temp-dir
       (fn [dir]
-        (with-redefs [http/get (fn [_ _] (fake-response 200 "same content"))]
-          (let [path1 (x/save-one "txt" "https://a.com" dir)
-                path2 (x/save-one "txt" "https://b.com" dir)]
+        (with-redefs [http/get (fn [_ _] (fake-response 200 "content"))]
+          (let [path1 (x/save-one "txt" "https://example.com/page" dir)
+                path2 (x/save-one "txt" "https://example.com/page" dir)]
             (is (= path1 path2))))))))
 
-(deftest save-one-different-body-different-hash-test
-  (testing "different bodies produce different filenames"
+(deftest save-one-different-url-different-filename-test
+  (testing "different URLs produce different filenames"
     (with-temp-dir
       (fn [dir]
         (with-redefs [http/get (fn [url _]
@@ -52,13 +52,13 @@
             (is (not= path1 path2))))))))
 
 (deftest save-one-dedup-test
-  (testing "second save of identical content reuses existing file without overwriting"
+  (testing "second save of same URL reuses existing file without overwriting"
     (with-temp-dir
       (fn [dir]
-        (with-redefs [http/get (fn [_ _] (fake-response 200 "duplicate"))]
-          (let [path1 (x/save-one "html" "https://example.com/a" dir)
+        (with-redefs [http/get (fn [_ _] (fake-response 200 "original"))]
+          (let [path1 (x/save-one "html" "https://example.com/page" dir)
                 _     (spit path1 "tampered")
-                path2 (x/save-one "html" "https://example.com/b" dir)]
+                path2 (x/save-one "html" "https://example.com/page" dir)]
             (is (= path1 path2))
             (is (= "tampered" (slurp path2))
                 "should not have overwritten the existing file")))))))
