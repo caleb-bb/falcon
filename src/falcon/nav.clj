@@ -21,6 +21,14 @@
   (e/click driver (:q leaf))
   driver)
 
+(defn- goto-recipe!
+  "Navigate by URL rather than by clicking a DOM element. Use for SPA tabs
+   and other targets that are route-driven instead of plain <a> links.
+   The leaf may carry an absolute :url, or a :path appended to base-url."
+  [driver base-url leaf]
+  (e/go driver (or (:url leaf) (str base-url (:path leaf))))
+  driver)
+
 (defn- scroll-recipe!
   [driver leaf opts _args]
   (let [wait-q    (get-in leaf [:wait-el :q])
@@ -67,7 +75,7 @@
 
 (defn do!
   "Execute a navigation action described by path against the site config.
-   The first element of path is the verb (:click, :scroll, :search, :paginate).
+   The first element of path is the verb (:click, :goto, :scroll, :search, :paginate).
    Remaining elements walk the intent tree to the DOM bindings.
    Additional args are verb-specific (e.g. search text for :search).
    Returns the driver."
@@ -77,6 +85,7 @@
         opts (get-in site [:opts verb])]
     (case verb
       :click    (click-recipe! driver leaf opts args)
+      :goto     (goto-recipe! driver (:base-url site) leaf)
       :scroll   (scroll-recipe! driver leaf opts args)
       :search   (search-recipe! driver leaf opts args)
       :paginate (paginate-recipe! driver leaf opts args)

@@ -150,8 +150,8 @@
       (:site s)   ;; the resolved config map
       Quick start:
       (require '[falcon.core :as c] '[falcon.extract :as x])  
-      (def s (c/session :ameriwater {:browser :firefox}))
-    (def urls (falcon.extract/all-attr s [:product-manual] :href))
+      (def s (c/session :quora))
+(nav/do! (:driver s) (:site s) [:goto :answers])
   To begin."
   ([site-key] (session site-key {}))
   ([site-key opts]
