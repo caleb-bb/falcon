@@ -6,6 +6,37 @@
 
 ;; ---- API ----
 
+(defn- el-property
+  "Read the property named by `attr` from a single element. :text (or nil)
+  reads the element's text; any other keyword reads that HTML attribute. The
+  locator that found the element is irrelevant here — :css, :xpath, etc. all
+  yield an element, so this stays agnostic to how membership was decided."
+  [driver el attr]
+  (if (or (nil? attr) (= :text attr))
+    (e/get-element-text-el driver el)
+    (e/get-element-attr-el driver el (name attr))))
+
+(defn for-all
+  "Set-builder extraction:  { property(x) | x matches noun }.
+
+  `noun` is an intent path into the site's :extract tree (a keyword, or a
+  vector of keywords) naming a leaf. The leaf's :q supplies the membership
+  predicate — the locator — and the function is agnostic to its kind (:css,
+  :xpath, :id, ...). The leaf's :attr names the property pooled (:text by
+  default, else an HTML attribute such as :href).
+
+  Every matching element is reduced to its property and the results are
+  pooled into a set (deduped, unordered). Returns a set of strings.
+
+  Example: (for-all session [:answer :fields :url])  ;; #{ href, href, ... }"
+  [session noun]
+  (let [driver (:driver session)
+        site   (:site session)
+        path   (if (sequential? noun) noun [noun])
+        leaf   (core/resolve-intent (get-in site [:extract]) path)
+        attr   (:attr leaf)]
+    (into #{} (core/leaf-map driver leaf #(el-property %1 %2 attr)))))
+
 (defn all-inner-text
   "Extract inner text of all matching elements to a vector"
   [session intent-path]
