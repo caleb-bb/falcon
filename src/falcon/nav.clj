@@ -73,15 +73,48 @@
 
 ;; ---- Public effectful functions ----
 
+(defn- resolve-leaf
+  "Walk the site's :nav tree by path, returning the leaf binding.
+   Throws with the available keys at the point of failure rather than
+   returning nil — a missing leaf otherwise surfaces downstream as a
+   confusing empty-URL / nil-query webdriver error."
+  [site path]
+  (loop [node (:nav site)
+         remaining path
+         walked [:nav]]
+    (cond
+      (nil? node)
+      (throw (ex-info
+              (str "Site \"" (:name site) "\" has no nav binding at "
+                   (conj walked (first remaining))
+                   " — \"" (name (first remaining)) "\" lookup hit a nil parent.")
+              {:site (:name site) :path (conj walked (first remaining))}))
+
+      (empty? remaining)
+      node
+
+      :else
+      (let [k (first remaining)
+            next-node (get node k)]
+        (if (nil? next-node)
+          (throw (ex-info
+                  (str "Site \"" (:name site) "\" has no nav binding at "
+                       (conj walked k) ". Available: " (vec (keys node)))
+                  {:site (:name site)
+                   :path (conj walked k)
+                   :available (vec (keys node))}))
+          (recur next-node (rest remaining) (conj walked k)))))))
+
 (defn do!
   "Execute a navigation action described by path against the site config.
    The first element of path is the verb (:click, :goto, :scroll, :search, :paginate).
    Remaining elements walk the intent tree to the DOM bindings.
    Additional args are verb-specific (e.g. search text for :search).
+   Throws a helpful error if path resolves to no leaf.
    Returns the driver."
   [driver site path & args]
   (let [verb (first path)
-        leaf (get-in site (into [:nav] path))
+        leaf (resolve-leaf site path)
         opts (get-in site [:opts verb])]
     (case verb
       :click    (click-recipe! driver leaf opts args)
