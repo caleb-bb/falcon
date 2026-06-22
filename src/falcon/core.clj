@@ -15,6 +15,8 @@
 
 ;; ---- Config loading ----
 
+(declare validate-edn!)
+
 (defn read-env
   "Read an environment variable by name. Extracted so tests can
   redef this instead of fighting System/getenv."
@@ -30,7 +32,8 @@
     (-> filename
         io/resource
         slurp
-        edn/read-string)))
+        edn/read-string
+        (validate-edn! site-key))))
 
 (defn resolve-env
   "Walk a site config and replace any :env/VAR_NAME values with the
@@ -149,9 +152,10 @@
       (:driver s) ;; the etaoin driver
       (:site s)   ;; the resolved config map
       Quick start:
-      (require '[falcon.core :as c] '[falcon.extract :as x])  
-      (def s (c/session :quora))
+      (require '[falcon.core :as c] '[falcon.extract :as x])
+      (def s (c/session :example-site {:browser :chrome :headless false}))
 (nav/do! (:driver s) (:site s) [:goto :answers])
+(nav/do! (:driver s) (:site s) [:scroll :infinite])
   To begin."
   ([site-key] (session site-key {}))
   ([site-key opts]
@@ -172,7 +176,10 @@
 ;; ---- Validators ----
 
 (def legal-keys #{:name :base-url :auth :nav :extract :opts})
-(def required-keys #{:base-url :name :opts})
+;; :opts is optional — recipes read it with get/get-in defaults, so a config
+;; without it runs fine. Only :name and :base-url are truly required (plus a
+;; verb, enforced separately by has-a-verb?).
+(def required-keys #{:base-url :name})
 (def verbs #{:auth :nav :extract})
 
 (def locator-types #{:css :xpath :tag :fn :id :class :name})
@@ -213,8 +220,9 @@
 (defn base-url-is-env-or-string? [edn]
   (let [edn-base-url (get edn :base-url)]
     (or
-     (= (type edn-base-url) java.lang.String)
-     (= "env" (namespace edn-base-url)))))
+     (string? edn-base-url)
+     (and (keyword? edn-base-url)
+          (= "env" (namespace edn-base-url))))))
 
 (defn opts-is-map? [edn]
   (let [edn-opts (get edn :opts {})]
@@ -240,3 +248,36 @@
 
 (defn valid-edn? [edn]
   (meets-requirements? edn))
+
+(def requirement-checks
+  "Named predicates behind meets-requirements?, so a failed load can report
+   which checks failed rather than a bare boolean."
+  [[:legal-keys?              legal-keys?]
+   [:has-a-verb?              has-a-verb?]
+   [:includes-required-keys?  includes-required-keys?]
+   [:name-is-string?          name-is-string?]
+   [:base-url-is-env-or-string? base-url-is-env-or-string?]
+   [:opts-is-map?             opts-is-map?]
+   [:nav-is-map?              nav-is-map?]
+   [:extract-is-map?          extract-is-map?]
+   [:auth-is-map?             auth-is-map?]])
+
+(defn validate-edn!
+  "Throw a helpful error if edn is not a valid site config, otherwise return it.
+   Catches malformed configs (e.g. a file missing its outer braces, which
+   edn/read-string silently truncates to its first form) at load time rather
+   than letting them surface as confusing nil-lookup errors downstream."
+  [edn site-key]
+  (when-not (map? edn)
+    (throw (ex-info (str "Site config for " site-key " did not parse to a map "
+                         "(got " (type edn) "). Check the .edn file is wrapped "
+                         "in outer { } braces.")
+                    {:site-key site-key :type (type edn) :value edn})))
+  (let [failed (->> requirement-checks
+                    (remove (fn [[_ pred]] (pred edn)))
+                    (mapv first))]
+    (when (seq failed)
+      (throw (ex-info (str "Invalid site config for " site-key
+                           "; failed checks: " failed)
+                      {:site-key site-key :failed failed :keys (vec (keys edn))}))))
+  edn)

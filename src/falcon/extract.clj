@@ -2,6 +2,8 @@
   (:require [etaoin.api :as e]
             [clj-http.client :as http]
             [falcon.core :as core]
+            [falcon.nav :as nav]
+            [clojure.pprint :as pp]
             [clojure.string :as str]))
 
 ;; ---- API ----
@@ -70,6 +72,48 @@
   returns the text content of all matching elements as a vector of strings."
   [driver q]
   (mapv #(e/get-element-text-el driver %) (e/query-all driver q)))
+
+(defn- field-value
+  "Read one field leaf scoped *within* a container element. Returns nil when
+  the field isn't present in this container (some cards in a feed carry only a
+  subset of the fields). Membership is decided by the field leaf's :q relative
+  to the container; the property pooled is its :attr (:text by default, else an
+  HTML attribute such as :href)."
+  [driver container-el {:keys [q attr]}]
+  (when-let [el (first (e/children driver container-el q))]
+    (el-property driver el attr)))
+
+(defn records
+  "Container-aware extraction:  one map per container, not one set per field.
+
+  `noun` is an intent path into the site's :extract tree naming a node that has
+  a :container leaf (the per-record wrapper) and a :fields map (field-name ->
+  leaf). For every element matching :container, each field leaf is queried
+  *scoped to that container* and reduced to its property, yielding a vector of
+  maps keyed by field name — so question/url/text stay associated, in document
+  order, with no dedup.
+
+  Rows where every field is blank/nil are dropped: a feed often carries a
+  header/summary card that matches the record container but none of its fields.
+
+  Example: (records session :answer)
+  ;; => [{:question \"...\" :url \"...\" :text \"...\"} ...]"
+  [session noun]
+  (let [driver (:driver session)
+        site   (:site session)
+        path   (if (sequential? noun) noun [noun])
+        node   (core/resolve-intent (:extract site) path)
+        container-q (get-in node [:container :q])
+        fields      (:fields node)]
+    (->> (e/query-all driver container-q)
+         (mapv (fn [container-el]
+                 (reduce-kv
+                  (fn [acc fname leaf]
+                    (assoc acc fname (field-value driver container-el leaf)))
+                  {}
+                  fields)))
+         (filterv (fn [record]
+                    (some #(not (str/blank? %)) (vals record)))))))
 
 ;; ---- Basic YAGNI-ware for i/o ----
 
@@ -206,3 +250,34 @@
    (mapv (fn [{:keys [text href]}]
            (save-one-with-edn ext href directory-path text))
          links)))
+
+(defn dump
+  "Deposit a whole collection of records (maps, as returned by `records`) into
+  a *single* file as pretty-printed EDN. Unlike save-many, this is one file for
+  the lot, not one file per item — no HTTP, just the in-memory data. Creates
+  parent dirs. Returns the file path.
+  Defaults to scraped/answers.edn."
+  ([records] (dump records (str default-save-dir "answers.edn")))
+  ([records file-path]
+   (clojure.java.io/make-parents file-path)
+   (spit file-path (with-out-str (pp/pprint records)))
+   file-path))
+
+;; ---- The one-liner ----
+
+(defn harvest!
+  "End-to-end, one call: navigate to the answers tab, scroll the infinite feed
+  to the end, extract every answer as a structured record, and deposit them all
+  in one EDN file. Takes a session (driver + resolved site) as returned by
+  falcon.core/session. `noun` defaults to :answer, `file-path` to
+  scraped/answers.edn. Returns the file path.
+
+  One-liner:
+    (require '[falcon.core :as c] '[falcon.extract :as x])
+    (x/harvest! (c/session :example-site))"
+  ([session] (harvest! session :answer (str default-save-dir "answers.edn")))
+  ([session noun file-path]
+   (let [{:keys [driver site]} session]
+     (nav/do! driver site [:goto :answers])
+     (nav/do! driver site [:scroll :infinite])
+     (dump (records session noun) file-path))))
