@@ -34,19 +34,26 @@
   (let [wait-q    (get-in leaf [:wait-el :q])
         done-el   (:done-el leaf)
         max-scrolls (get opts :max-scrolls 50)
-        pause-ms    (get opts :pause-ms 1500)]
+        pause-ms    (get opts :pause-ms 1500)
+        ;; How many consecutive no-growth scrolls to tolerate before
+        ;; concluding the feed is exhausted. Infinite feeds load
+        ;; asynchronously, so a single slow load looks like the end —
+        ;; without patience the loop bails on the first stall.
+        patience    (get opts :patience 3)]
     (loop [n 0
+           stable 0
            prev-count (count-elements driver wait-q)]
       (if (or (>= n max-scrolls)
-              (done? driver done-el))
+              (done? driver done-el)
+              (>= stable patience))
         driver
         (do
           (e/scroll-bottom driver)
           (e/wait driver (/ pause-ms 1000.0))
           (let [new-count (count-elements driver wait-q)]
             (if (> new-count prev-count)
-              (recur (inc n) new-count)
-              driver)))))))
+              (recur (inc n) 0 new-count)
+              (recur (inc n) (inc stable) prev-count))))))))
 
 (defn- search-recipe!
   [driver leaf _opts args]
